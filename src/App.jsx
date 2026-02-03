@@ -1,0 +1,184 @@
+import Display from "./components/card"
+import './App.css'
+import {useEffect, useState } from "react";
+import { Button, Offcanvas, Form } from "react-bootstrap";
+
+import Container from 'react-bootstrap/Container';
+import Nav from 'react-bootstrap/Nav';
+import Navbar from 'react-bootstrap/Navbar';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import { faL } from "@fortawesome/free-solid-svg-icons";
+
+
+const API_Url = 'https://69665990f6de16bde44d1c9d.mockapi.io/api/v1/Produtos';
+
+function App() {
+
+  /* Loading */
+  const [loading, setLoading] = useState(true);
+  
+  /* Aside */
+    const [showAside, setShowAside] = useState(false);
+
+    const abrirAside = () => setShowAside(true);
+    const fecharAside = () => setShowAside(false);
+
+    /* ------------------------------------------------------------ */
+
+    const [produtos, setProdutos] = useState([]);
+    const [novoProduto, setNovoProduto] = useState('');
+    const [novaDescricao, setNovaDescricao] = useState('');
+    const [novoPreco, setNovoPreco] = useState('');
+
+    useEffect(() => {
+      setLoading(true);
+
+      setTimeout(() => {
+        fetch(API_Url)
+          .then(res => res.json())
+          .then(dados => {
+            setProdutos(dados);
+            setLoading(false);
+          }) 
+        .catch(error => {
+          console.error('Erro ao buscar produto:',error);
+          setLoading(false);
+        });
+      }, 2000); 
+    },[])
+
+    const deleteProduto = async (id) => {
+      console.log('ID a excluir:', id);
+      if (!window.confirm('Deseja excluir este produto?')) return;
+
+      try {
+        await fetch(`${API_Url}/${id}`, {
+          method: 'DELETE'
+        });
+
+        // remove da tela sem precisar refetch
+        setProdutos(produtos.filter(p => p.id !== id));
+      } catch (err) {
+        console.error('Erro ao deletar produto:', err);
+      }
+    };
+
+    const handleSubmit = (e) => {
+      e.preventDefault();
+
+      if(novoProduto.trim() === '') return;
+
+      const novo = {
+        titulo: novoProduto.trim(),
+        texto: novaDescricao.trim(),
+        preco: novoPreco.trim()
+      }
+
+      fetch(API_Url, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(novo)
+      })
+      .then(res => res.json())
+      .then(produtoCriado => {
+        setProdutos([...produtos, produtoCriado])
+        setNovoProduto('');
+        setNovaDescricao('');
+        setNovoPreco('');
+      })
+      .catch(error => console.error('Erro ao criar produto:',error))
+
+       fecharAside();
+    }
+
+  return (
+    <>
+      <Navbar bg="dark" data-bs-theme="dark">
+        <Container>
+          <Navbar.Brand href="#home">Cervas' Sport</Navbar.Brand>
+          <Nav className="me-auto">
+            <Nav.Link href="#home">Home</Nav.Link>
+            <Nav.Link href="#produtos">Produtos</Nav.Link>
+            <Nav.Link href="#contato">Contato</Nav.Link>
+          </Nav>
+        </Container>
+      </Navbar>
+
+      <section className="p-5 hero">
+        <h1 className="text-center text-white hero__titulo">Bem-vindo ao MAIOR site esportivo da minha cadeira!</h1>
+      </section>
+      
+      {!showAside && (<Button variant="success" className="btn-aside" onClick={abrirAside}>Novo Produto</Button>)}
+      
+      <Offcanvas show={showAside} onHide={fecharAside} placement="end">
+        <Offcanvas.Header closeButton>
+          <Offcanvas.Title>Novo Produto</Offcanvas.Title>
+        </Offcanvas.Header>
+
+        <Offcanvas.Body>
+          <Form onSubmit={handleSubmit}>
+            <Form.Group className="mb-3 d-flex flex-column">
+              <Form.Label>Produto</Form.Label>
+              <input type="text" placeholder="Nome do produto" 
+                value={novoProduto}
+                onChange={(e) => setNovoProduto(e.target.value)}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3 d-flex flex-column">
+              <Form.Label>Descrição</Form.Label>
+              <input type="text" placeholder="Descrição do produto" 
+                value={novaDescricao}
+                onChange={(e) => setNovaDescricao(e.target.value)}
+              />
+            </Form.Group>
+
+            <Form.Group className="mb-3 d-flex flex-column">
+              <Form.Label>Preço</Form.Label>
+              <input type="text" placeholder="Valor do produto" 
+                value={novoPreco}
+                onChange={(e) => setNovoPreco(e.target.value)}
+              />
+            </Form.Group>
+            <div className="d-flex justify-content-end gap-2">
+              <Button variant="secondary" onClick={fecharAside}>
+                Cancelar
+              </Button>
+
+              <Button type="submit" variant="success">
+                Salvar
+              </Button>
+            </div>
+          </Form>
+        </Offcanvas.Body>
+      </Offcanvas>
+
+      <div className="container mt-4">
+        {loading ? (
+          <p className="text-center mt-4">Carregando produtos...</p>
+        ) : (
+          <Row className="row-cols-1 row-cols-md-2 row-cols-lg-3 g-4 justify-content-center">
+            {produtos.map(produto => (
+              <Col key={produto.id} className="d-flex">
+                <Display
+                  id={produto.id}
+                  titulo={produto.titulo}
+                  texto={produto.texto}
+                  preco={produto.preco}
+                  onDelete={deleteProduto}
+                />
+              </Col>
+            ))}
+          </Row>
+        )}
+      </div>
+
+      <footer className="text-center py-1">
+        <p>&copy; 2026 Cervas' Sport - Todos os direitos reservados.</p>
+      </footer>
+    </>
+  )
+}
+
+export default App
