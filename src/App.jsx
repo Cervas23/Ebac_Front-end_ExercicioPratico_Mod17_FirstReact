@@ -136,9 +136,17 @@ function App() {
 
             <Form.Group className="mb-3 d-flex flex-column">
               <Form.Label>Preço</Form.Label>
-              <input type="text" placeholder="Valor do produto" 
+              <Form.Control type="number" 
+                step="0.01" 
+                min="0" 
+                placeholder="Valor do produto" 
                 value={novoPreco}
                 onChange={(e) => setNovoPreco(e.target.value)}
+                onKeyDown={(e) => {
+                  if (["e", "E", "+", "-"].includes(e.key)) {
+                    e.preventDefault();
+                  }
+                }}
               />
             </Form.Group>
             <div className="d-flex justify-content-end gap-2">
