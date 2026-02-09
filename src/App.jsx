@@ -1,6 +1,5 @@
 import Display from "./components/card"
-import './App.css'
-import {useEffect, useState } from "react";
+import {useEffect, useState, useRef } from "react";
 import { Button, Offcanvas, Form } from "react-bootstrap";
 
 import Container from 'react-bootstrap/Container';
@@ -8,8 +7,63 @@ import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-import { faL } from "@fortawesome/free-solid-svg-icons";
+import styled from "styled-components";
+import bgSoccer from './assets/bg-soccer.jpg'
 
+const Secao = styled.section`
+  position: relative;
+  min-height: 30vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 3rem;
+
+  background: url(${bgSoccer}) center / cover no-repeat;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.5)
+  }
+`;
+
+const Titulo = styled.h1`
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  max-width: 900px;
+
+  color: white;
+  text-align: center;
+
+  position: relative;
+  z-index: 1;
+`;
+
+const BtnAdd = styled.button`
+  position: fixed;
+  top: 90%;
+  right: 50px;
+  transform: translateY(-50%);
+  z-index: 1050;
+  background-color: #198754;
+  border-radius: 5px;
+  border: none;
+  color: white;
+  padding: 5px;
+`;
+
+const BtnSave = styled.button`
+  background-color: ${({adicionado}) => (adicionado ? "#198754" : "#6c757d")};
+  border-radius: 5px;
+  border: none;
+  color: white;
+  padding: 5px;
+`;
 
 const API_Url = 'https://69665990f6de16bde44d1c9d.mockapi.io/api/v1/Produtos';
 
@@ -31,6 +85,9 @@ function App() {
     const [novaDescricao, setNovaDescricao] = useState('');
     const [novoPreco, setNovoPreco] = useState('');
 
+    const [adicionado, setAdicionado] = useState(false);
+    const formRef = useRef(null);
+ 
     useEffect(() => {
       setLoading(true);
 
@@ -69,12 +126,14 @@ function App() {
 
       if(novoProduto.trim() === '') return;
 
+      setAdicionado(true);
+
       const novo = {
         titulo: novoProduto.trim(),
         texto: novaDescricao.trim(),
         preco: novoPreco.trim()
       }
-
+      
       fetch(API_Url, {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -86,10 +145,17 @@ function App() {
         setNovoProduto('');
         setNovaDescricao('');
         setNovoPreco('');
-      })
-      .catch(error => console.error('Erro ao criar produto:',error))
 
-       fecharAside();
+        setTimeout(() =>{
+          setAdicionado(false);
+          fecharAside();
+        }, 2000);
+
+      })
+      .catch(error => {
+        console.error('Erro ao criar produto:',error);
+        setAdicionado(false);
+      });
     }
 
   return (
@@ -105,11 +171,11 @@ function App() {
         </Container>
       </Navbar>
 
-      <section className="p-5 hero">
-        <h1 className="text-center text-white hero__titulo">Bem-vindo ao MAIOR site esportivo da minha cadeira!</h1>
-      </section>
+      <Secao>
+        <Titulo >Bem-vindo ao MAIOR site esportivo da minha cadeira!</Titulo>
+      </Secao>
       
-      {!showAside && (<Button variant="success" className="btn-aside" onClick={abrirAside}>Novo Produto</Button>)}
+      {!showAside && (<BtnAdd onClick={abrirAside}>Novo Produto</BtnAdd>)}
       
       <Offcanvas show={showAside} onHide={fecharAside} placement="end">
         <Offcanvas.Header closeButton>
@@ -117,48 +183,54 @@ function App() {
         </Offcanvas.Header>
 
         <Offcanvas.Body>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3 d-flex flex-column">
-              <Form.Label>Produto</Form.Label>
-              <input type="text" placeholder="Nome do produto" 
-                value={novoProduto}
-                onChange={(e) => setNovoProduto(e.target.value)}
-              />
-            </Form.Group>
+          <div className="container mt-4">
+            {adicionado ? (
+              <p className="text-center mt-4">Adicionando produto...</p>
+            ) : (
+              <Form ref={formRef} onSubmit={handleSubmit}>
+                <Form.Group className="mb-3 d-flex flex-column">
+                  <Form.Label>Produto</Form.Label>
+                  <input type="text" placeholder="Nome do produto" 
+                    value={novoProduto}
+                    onChange={(e) => setNovoProduto(e.target.value)}
+                  />
+                </Form.Group>
 
-            <Form.Group className="mb-3 d-flex flex-column">
-              <Form.Label>Descrição</Form.Label>
-              <input type="text" placeholder="Descrição do produto" 
-                value={novaDescricao}
-                onChange={(e) => setNovaDescricao(e.target.value)}
-              />
-            </Form.Group>
+                <Form.Group className="mb-3 d-flex flex-column">
+                  <Form.Label>Descrição</Form.Label>
+                  <input type="text" placeholder="Descrição do produto" 
+                    value={novaDescricao}
+                    onChange={(e) => setNovaDescricao(e.target.value)}
+                  />
+                </Form.Group>
 
-            <Form.Group className="mb-3 d-flex flex-column">
-              <Form.Label>Preço</Form.Label>
-              <Form.Control type="number" 
-                step="0.01" 
-                min="0" 
-                placeholder="Valor do produto" 
-                value={novoPreco}
-                onChange={(e) => setNovoPreco(e.target.value)}
-                onKeyDown={(e) => {
-                  if (["e", "E", "+", "-"].includes(e.key)) {
-                    e.preventDefault();
-                  }
-                }}
-              />
-            </Form.Group>
+                <Form.Group className="mb-3 d-flex flex-column">
+                  <Form.Label>Preço</Form.Label>
+                  <Form.Control type="number" 
+                    step="0.01" 
+                    min="0" 
+                    placeholder="Valor do produto" 
+                    value={novoPreco}
+                    onChange={(e) => setNovoPreco(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (["e", "E", "+", "-"].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                  />
+                </Form.Group>
+              </Form>
+            )}
             <div className="d-flex justify-content-end gap-2">
               <Button variant="secondary" onClick={fecharAside}>
                 Cancelar
               </Button>
-
-              <Button type="submit" variant="success">
-                Salvar
-              </Button>
+              <BtnSave type="submit" adicionado={adicionado} onClick={() => formRef.current.requestSubmit()}>
+                {adicionado ? "Salvando..." : "Salvar"}
+              </BtnSave>
             </div>
-          </Form>
+          </div>
+          
         </Offcanvas.Body>
       </Offcanvas>
 
