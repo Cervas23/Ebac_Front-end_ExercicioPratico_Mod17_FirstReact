@@ -58,7 +58,7 @@ const BtnAdd = styled.button`
 `;
 
 const BtnSave = styled.button`
-  background-color: ${({adicionado}) => (adicionado ? "#198754" : "#6c757d")};
+  background-color: ${({salvo}) => (salvo ? "#198754" : "#6c757d")};
   border-radius: 5px;
   border: none;
   color: white;
@@ -85,7 +85,7 @@ function App() {
     const [novaDescricao, setNovaDescricao] = useState('');
     const [novoPreco, setNovoPreco] = useState('');
 
-    const [adicionado, setAdicionado] = useState(false);
+    const [salvo, setSalvo] = useState(false);
     const formRef = useRef(null);
  
     useEffect(() => {
@@ -126,7 +126,7 @@ function App() {
 
       if(novoProduto.trim() === '') return;
 
-      setAdicionado(true);
+      setSalvo(true);
 
       const novo = {
         titulo: novoProduto.trim(),
@@ -147,14 +147,14 @@ function App() {
         setNovoPreco('');
 
         setTimeout(() =>{
-          setAdicionado(false);
+          setSalvo(false);
           fecharAside();
         }, 2000);
 
       })
       .catch(error => {
         console.error('Erro ao criar produto:',error);
-        setAdicionado(false);
+        setSalvo(false);
       });
     }
 
@@ -184,7 +184,7 @@ function App() {
 
         <Offcanvas.Body>
           <div className="container mt-4">
-            {adicionado ? (
+            {salvo ? (
               <p className="text-center mt-4">Adicionando produto...</p>
             ) : (
               <Form ref={formRef} onSubmit={handleSubmit}>
@@ -225,8 +225,8 @@ function App() {
               <Button variant="secondary" onClick={fecharAside}>
                 Cancelar
               </Button>
-              <BtnSave type="submit" adicionado={adicionado} onClick={() => formRef.current.requestSubmit()}>
-                {adicionado ? "Salvando..." : "Salvar"}
+              <BtnSave type="submit" salvo={salvo} onClick={() => formRef.current.requestSubmit()}>
+                {salvo ? "Salvando..." : "Salvar"}
               </BtnSave>
             </div>
           </div>

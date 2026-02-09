@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {faTrash} from  '@fortawesome/free-solid-svg-icons'
 import {faCartShopping} from '@fortawesome/free-solid-svg-icons'
 import styled from 'styled-components';
+import { useState } from 'react';
 
 const BtnExcluir = styled.button`
   position: absolute;
@@ -26,13 +27,20 @@ const BtnCart = styled.button`
   padding: 0.6rem 1rem;
   border-radius: 0.375rem;
   border: none;
-  background-color: #0d6efd;
+  background-color: ${({adicionado}) => (adicionado ? "#198754" : "#6c757d")};
   color: #fff;
   font-weight: 700;
-
 `;
 
+
 function Display({id, titulo, texto, preco, onDelete}){
+
+  const [adicionado, setAdicionado] = useState(false);
+
+  const addCarrinho = () => {
+    setAdicionado(prev => !prev);
+  };
+
   return (
     <Card className="w-100 h-100 position-relative">
       <Card.Img variant="top" src="https://placehold.co/286x180"/>
@@ -45,8 +53,8 @@ function Display({id, titulo, texto, preco, onDelete}){
           Compre Agora por R${preco}!
         </Card.Text>
         <BtnExcluir onClick={()=> onDelete(id)}><FontAwesomeIcon icon={faTrash}/></BtnExcluir>
-        <BtnCart>
-          Adicionar ao carrinho
+        <BtnCart adicionado={adicionado} onClick={addCarrinho}>
+          {adicionado ? "Adicionado ao carrinho" : "Adicionar ao carrinho"}
           <FontAwesomeIcon icon={faCartShopping}/>
         </BtnCart>
       </Card.Body>
